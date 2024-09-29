@@ -884,6 +884,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 990df685aeae40e4192c18b0ffd8daf2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Rt1: {fileID: 8400000, guid: 1fcca3fbfaaee534a897be99176e82a7, type: 2}
+  Rt2: {fileID: 8400000, guid: 0c5d385149e19aa4ebbbadeb4f3c269f, type: 2}
   Cam: {fileID: 337736213}
 --- !u!64 &1883417053
 MeshCollider:

@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class DrawOnMesh : MonoBehaviour
 {
+    public RenderTexture Rt1;
+    public RenderTexture Rt2;
     public Camera Cam;
-    private Ray RayMouse;
+    private Ray _rayMouse;//相机指向鼠标点的射线
     void Start()
     {
         
@@ -16,8 +18,8 @@ public class DrawOnMesh : MonoBehaviour
     {
         RaycastHit hit; //DELATE THIS IF YOU WANT TO USE LASERS IN 2D
         var mousePos = Input.mousePosition;
-        RayMouse = Cam.ScreenPointToRay(mousePos);
-        if (Physics.Raycast(RayMouse, out hit))
+        _rayMouse = Cam.ScreenPointToRay(mousePos);
+        if (Physics.Raycast(_rayMouse, out hit))
         {
             Debug.Log(hit.point);
             Debug.Log(hit.textureCoord);
