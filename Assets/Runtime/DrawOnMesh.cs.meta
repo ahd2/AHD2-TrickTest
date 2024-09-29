@@ -3,7 +3,11 @@ guid: 990df685aeae40e4192c18b0ffd8daf2
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - Rt1: {fileID: 8400000, guid: 1fcca3fbfaaee534a897be99176e82a7, type: 2}
+  - Rt2: {fileID: 8400000, guid: 0c5d385149e19aa4ebbbadeb4f3c269f, type: 2}
+  - Cam: {instanceID: 0}
+  - CalTemperatureMat: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
