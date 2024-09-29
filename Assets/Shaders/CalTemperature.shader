@@ -51,7 +51,7 @@ Shader "Fire/CalTemperature"
                     return col + smoothstep(0.1, 0, dis) * 0.005;
                 }else
                 {
-                    return col * 0.999 + smoothstep(0.1, 0, dis) * 0.005;
+                    return col * 0.995 + smoothstep(0.1, 0, dis) * 0.01;
                 }
             }
             ENDHLSL
