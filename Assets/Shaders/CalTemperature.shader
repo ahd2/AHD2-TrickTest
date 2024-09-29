@@ -46,7 +46,13 @@ Shader "Fire/CalTemperature"
                 // sample the texture
                 float4 col = tex2D(_MainTex, i.uv);
                 half dis = distance(i.uv, _HitUV);
-                return col * 0.95 + smoothstep(0.1, 0, dis);
+                if(col.r > 0.95)
+                {
+                    return col + smoothstep(0.1, 0, dis) * 0.005;
+                }else
+                {
+                    return col * 0.999 + smoothstep(0.1, 0, dis) * 0.005;
+                }
             }
             ENDHLSL
         }
@@ -87,7 +93,13 @@ Shader "Fire/CalTemperature"
                 // sample the texture
                 float4 col = tex2D(_MainTex, i.uv);
                 half dis = distance(i.uv, _HitUV);
-                return col * 0.95;
+                if(col.r > 0.95)
+                {
+                    return col;
+                }else
+                {
+                    return col * 0.995;
+                }
             }
             ENDHLSL
         }

@@ -11,6 +11,7 @@ public class DrawOnMesh : MonoBehaviour
     private Vector2 _hitUV = Vector2.zero;
     public Material CalTemperatureMat;//补个判空才对
     private static readonly int HitUV = Shader.PropertyToID("_HitUV");
+    private static readonly int TemperatureTex = Shader.PropertyToID("_TemperatureTex");
 
     void Start()
     {
@@ -18,7 +19,7 @@ public class DrawOnMesh : MonoBehaviour
         Graphics.Blit(Texture2D.blackTexture, Rt2);
     }
 
-    void Update()
+    void FixedUpdate()
     {
         RaycastHit hit;
         var mousePos = Input.mousePosition;
@@ -39,5 +40,6 @@ public class DrawOnMesh : MonoBehaviour
             Graphics.Blit(Rt1, Rt2, CalTemperatureMat, 1);
             Graphics.Blit(Rt2, Rt1);
         }
+        Shader.SetGlobalTexture(TemperatureTex, Rt2);
     }
 }
