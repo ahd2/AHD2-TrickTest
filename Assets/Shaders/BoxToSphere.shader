@@ -63,8 +63,8 @@ Shader "CustomShader/BoxToSphere"
 
                 float3 originalWS = TransformObjectToWorld(float3(0, 0, 0));//原点的世界坐标
                 //half sdf = SphereSDF(originalWS);//只有球体
-                //half sdf = length(originalWS - _PlayerPos) * 0.2;//只有玩家
-                half sdf = min(SphereSDF(originalWS), length(originalWS - _PlayerPos) * 0.2);//加上玩家
+                half sdf = length(originalWS - _PlayerPos) * 0.2;//只有玩家
+                //half sdf = min(SphereSDF(originalWS), length(originalWS - _PlayerPos) * 0.2);//加上玩家
                 sdf = 1 - saturate(abs(sdf) -0.3);
                 v.positionOS.xyz += (radius - v2oDistance) * vDir * _Param * sdf;//顶点偏移  没够的距离乘以方向
                 o.positionCS = TransformObjectToHClip(v.positionOS);
