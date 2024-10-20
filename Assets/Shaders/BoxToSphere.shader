@@ -3,6 +3,7 @@ Shader "CustomShader/BoxToSphere"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        _SphereCol("SphereCol", Color) = (0, 0, 0, 1)
         _Param("偏移系数", Range(0, 1)) = 0.0
     }
     SubShader
@@ -35,6 +36,7 @@ Shader "CustomShader/BoxToSphere"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
+            half4 _SphereCol;
             half _Param;
 
             v2f vert (appdata v)
@@ -45,6 +47,7 @@ Shader "CustomShader/BoxToSphere"
                 half3 vDir = normalize(v.positionOS.xyz);//顶点的方向向量
                 v.positionOS.xyz += (radius - v2oDistance) * vDir * _Param;//顶点偏移  没够的距离乘以方向
                 o.positionCS = TransformObjectToHClip(v.positionOS);
+                v.normalOS = lerp(v.normalOS, vDir, _Param);
                 o.normalWS = TransformObjectToWorldNormal(v.normalOS);//向量记得在片元归一化
                 o.positionWS = TransformObjectToWorld(v.positionOS);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
@@ -55,7 +58,10 @@ Shader "CustomShader/BoxToSphere"
             {
                 i.normalWS = normalize(i.normalWS);
                 half4 col = tex2D(_MainTex, i.uv);
-                return col;
+                half NoL = max(0, dot(i.normalWS, _MainLightPosition));
+                half halflambert = (NoL * 0.5 + 0.5) * (NoL * 0.5 + 0.5);
+                col = lerp(col, _SphereCol, _Param);
+                return col * halflambert;
             }
             ENDHLSL
         }
