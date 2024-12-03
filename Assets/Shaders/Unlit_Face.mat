@@ -26,7 +26,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _MaxDistance: 5
+    - _MaxDistance: 3
     m_Colors:
-    - _FaceColor: {r: 0.0081167575, g: 0.3584906, b: 0.04246711, a: 1}
+    - _FaceColor: {r: 0.007843137, g: 0.29257658, b: 0.35686275, a: 1}
   m_BuildTextureStacks: []

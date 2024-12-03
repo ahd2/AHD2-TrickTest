@@ -28,7 +28,7 @@ Shader "Unlit/Sphere"
             {
                 float2 uv : TEXCOORD0;
                 float4 positionCS : SV_POSITION;
-                float3 positionWS : TEXCOORD1;
+                float4 positionWS : TEXCOORD1;//a通道存光源到原点距离
                 float3 normalWS  : TEXCOORD2;
             };
 
@@ -37,6 +37,8 @@ Shader "Unlit/Sphere"
             
             CBUFFER_START(UnityPerMaterial)
             float4 _MainTex_ST;
+            float3 _SpherePosition;
+            float _MaxDistance;
             CBUFFER_END
 
             v2f vert (appdata v)
@@ -44,8 +46,11 @@ Shader "Unlit/Sphere"
                 v2f o;
                 o.positionCS = TransformObjectToHClip(v.positionOS.xyz);
                 o.normalWS = TransformObjectToWorldNormal(v.normalOS);//向量记得在片元归一化
-                o.positionWS = TransformObjectToWorld(v.positionOS.xyz);
+                o.positionWS.xyz = TransformObjectToWorld(v.positionOS.xyz);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                float3 originalPos = TransformObjectToWorld(float3(0, 0, 0));
+                o.positionWS.a = distance(originalPos, _SpherePosition);
+                o.positionWS.a = 1 - saturate(o.positionWS.a / _MaxDistance);//但是永远无法到达最近，所以distance永远无法为1，而且会有一段距离
                 return o;
             }
 
@@ -55,8 +60,14 @@ Shader "Unlit/Sphere"
                 Light pointLight = GetAdditionalLight(0, i.positionWS);//只拿唯一一个点光源
                 half halflambert = dot(i.normalWS, pointLight.direction) * 0.5 + 0.5;
                 halflambert *= halflambert;
-                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
-                return col * halflambert;
+                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, float2(halflambert, 0.5));
+                //边缘光
+                half3 viewDirWS = normalize(normalize(GetWorldSpaceViewDir(i.positionWS)) - float3(pointLight.direction.x, 0, pointLight.direction.z));
+                //viewDirWS -= pointLight.direction;
+                half NoV = saturate(pow(1 - dot(viewDirWS, i.normalWS), 5));
+                half3 rimCol = NoV * pointLight.color;
+                col.xyz += rimCol;
+                return col;
             }
             ENDHLSL
         }
