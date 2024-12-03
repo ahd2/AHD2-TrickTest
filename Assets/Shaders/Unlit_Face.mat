@@ -25,6 +25,8 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _MaxDistance: 5
+    m_Colors:
+    - _FaceColor: {r: 0.0081167575, g: 0.3584906, b: 0.04246711, a: 1}
   m_BuildTextureStacks: []

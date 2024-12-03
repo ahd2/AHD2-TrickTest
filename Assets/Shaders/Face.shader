@@ -3,6 +3,8 @@ Shader "Unlit/Face"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        _MaxDistance ("MaxDistance ", Float) = 5.0
+        _FaceColor("FaceColor", Color) = (0, 0, 0, 1)
     }
     SubShader
     {
@@ -27,7 +29,7 @@ Shader "Unlit/Face"
 
             struct v2f
             {
-                float2 uv : TEXCOORD0;
+                float4 uv : TEXCOORD0;//zw通道存方向
                 float4 positionCS : SV_POSITION;
                 float4 positionWS : TEXCOORD1;//a通道存光源到原点距离
                 float3 normalWS  : TEXCOORD2;
@@ -39,6 +41,8 @@ Shader "Unlit/Face"
             CBUFFER_START(UnityPerMaterial)
             float4 _MainTex_ST;
             float3 _SpherePosition;
+            half4 _FaceColor;
+            float _MaxDistance;
             CBUFFER_END
 
             v2f vert (appdata v)
@@ -47,9 +51,11 @@ Shader "Unlit/Face"
                 o.positionCS = TransformObjectToHClip(v.positionOS.xyz);
                 o.normalWS = TransformObjectToWorldNormal(v.normalOS);//向量记得在片元归一化
                 o.positionWS.xyz = TransformObjectToWorld(v.positionOS.xyz);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.uv.xy = TRANSFORM_TEX(v.uv, _MainTex);
                 float3 originalPos = TransformObjectToWorld(float3(0, 0, 0));
                 o.positionWS.a = distance(originalPos, _SpherePosition);
+                o.positionWS.a = 1 - saturate(o.positionWS.a / _MaxDistance);//但是永远无法到达最近，所以distance永远无法为1，而且会有一段距离
+                o.uv.zw = normalize(_SpherePosition - originalPos).xz;//世界空间坐标方向
                 return o;
             }
 
@@ -103,28 +109,34 @@ Shader "Unlit/Face"
             half4 frag (v2f i) : SV_Target
             {
                 i.normalWS = normalize(i.normalWS);
-                float distance = 1 - saturate(i.positionWS.a / 5.0);//但是永远无法到达最近，所以distance永远无法为1，而且会有一段距离
+                float dis = i.positionWS.a;
                 
-                //float2 p = (2.0 * i.uv.xy-iResolution.xy)/iResolution.y;
                 //左边眼睛
-                float2 ALeft = float2(0.2, 0.6), BLeft = float2(0.3, 0.7 - 0.25 * distance), CLeft = float2(0.4, 0.6);
+                float2 ALeft = float2(0.2, 0.6), BLeft = float2(0.3, 0.7 - 0.25 * dis), CLeft = float2(0.4, 0.6);
                 float dLeft = abs(sdBezier(ALeft, BLeft, CLeft, i.uv));
 
                 //右边眼睛
-                float2 ARight = float2(0.6, 0.6), BRight = float2(0.7, 0.7 - 0.25 * distance), CRight = float2(0.8, 0.6);
+                float2 ARight = float2(0.6, 0.6), BRight = float2(0.7, 0.7 - 0.25 * dis), CRight = float2(0.8, 0.6);
                 float dRight = abs(sdBezier(ARight, BRight, CRight, i.uv));
 
                 //嘴巴
-                float2 AMouth = float2(0.42, 0.3), BMouth = float2(0.5, 0.22 + 0.2 * distance), CMouth = float2(0.58, 0.3);
+                float2 AMouth = float2(0.42, 0.3), BMouth = float2(0.5, 0.22 + 0.2 * dis), CMouth = float2(0.58, 0.3);
                 float dMouth = abs(sdBezier(AMouth, BMouth, CMouth, i.uv)) * 2;
                 
-                //float d = min(dLeft, dRight);//先都取绝对值再取最小值
-                float d = min(min(dLeft, dRight), dMouth);//先都取绝对值再取最小值
+                float dEyes = min(dLeft, dRight);//先都取绝对值再取最小值
+                float d = min(dEyes, dMouth);//先都取绝对值再取最小值
                 d = smoothstep(0, 0.15, d);
+
+                dEyes = step(dEyes, 0.04 * dis);
+                //眼睛瞳孔(不能直接用Bleft这种，因为他们有位移了
+                float EyesCore = min(distance(i.uv, float2(0.3, 0.6) - (0.03 * i.uv.zw * dis)), distance(i.uv, float2(0.7, 0.6) - (0.03 * i.uv.zw * dis)));
+                EyesCore = step(0.06, EyesCore);
                 
                 clip(0.3 - d);
-                
-                return d;
+                //return EyesCore;
+                //return EyesCore;
+                //return dEyes;
+                return lerp(_FaceColor, EyesCore, dEyes);
             }
             ENDHLSL
         }
