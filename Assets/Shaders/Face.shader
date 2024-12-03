@@ -29,7 +29,7 @@ Shader "Unlit/Face"
             {
                 float2 uv : TEXCOORD0;
                 float4 positionCS : SV_POSITION;
-                float3 positionWS : TEXCOORD1;
+                float4 positionWS : TEXCOORD1;//a通道存光源到原点距离
                 float3 normalWS  : TEXCOORD2;
             };
 
@@ -38,6 +38,7 @@ Shader "Unlit/Face"
             
             CBUFFER_START(UnityPerMaterial)
             float4 _MainTex_ST;
+            float3 _SpherePosition;
             CBUFFER_END
 
             v2f vert (appdata v)
@@ -45,8 +46,10 @@ Shader "Unlit/Face"
                 v2f o;
                 o.positionCS = TransformObjectToHClip(v.positionOS.xyz);
                 o.normalWS = TransformObjectToWorldNormal(v.normalOS);//向量记得在片元归一化
-                o.positionWS = TransformObjectToWorld(v.positionOS.xyz);
+                o.positionWS.xyz = TransformObjectToWorld(v.positionOS.xyz);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                float3 originalPos = TransformObjectToWorld(float3(0, 0, 0));
+                o.positionWS.a = distance(originalPos, _SpherePosition);
                 return o;
             }
 
@@ -100,29 +103,27 @@ Shader "Unlit/Face"
             half4 frag (v2f i) : SV_Target
             {
                 i.normalWS = normalize(i.normalWS);
-                Light pointLight = GetAdditionalLight(0, i.positionWS);//只拿唯一一个点光源
-                half halflambert = dot(i.normalWS, pointLight.direction) * 0.5 + 0.5;
-                halflambert *= halflambert;
+                float distance = 1 - saturate(i.positionWS.a / 5.0);//但是永远无法到达最近，所以distance永远无法为1，而且会有一段距离
                 
                 //float2 p = (2.0 * i.uv.xy-iResolution.xy)/iResolution.y;
                 //左边眼睛
-                float2 ALeft = float2(0.1, 0.7), BLeft = float2(0.25, 0.8), CLeft = float2(0.4, 0.7);
+                float2 ALeft = float2(0.2, 0.6), BLeft = float2(0.3, 0.7 - 0.25 * distance), CLeft = float2(0.4, 0.6);
                 float dLeft = abs(sdBezier(ALeft, BLeft, CLeft, i.uv));
 
                 //右边眼睛
-                float2 ARight = float2(0.6, 0.7), BRight = float2(0.75, 0.8), CRight = float2(0.9, 0.7);
+                float2 ARight = float2(0.6, 0.6), BRight = float2(0.7, 0.7 - 0.25 * distance), CRight = float2(0.8, 0.6);
                 float dRight = abs(sdBezier(ARight, BRight, CRight, i.uv));
 
                 //嘴巴
-                float2 AMouth = float2(0.4, 0.3), BMouth = float2(0.5, 0.2), CMouth = float2(0.6, 0.3);
-                float dMouth = abs(sdBezier(AMouth, BMouth, CMouth, i.uv));
+                float2 AMouth = float2(0.42, 0.3), BMouth = float2(0.5, 0.22 + 0.2 * distance), CMouth = float2(0.58, 0.3);
+                float dMouth = abs(sdBezier(AMouth, BMouth, CMouth, i.uv)) * 2;
                 
                 //float d = min(dLeft, dRight);//先都取绝对值再取最小值
                 float d = min(min(dLeft, dRight), dMouth);//先都取绝对值再取最小值
                 d = smoothstep(0, 0.15, d);
                 
-                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
-                //clip(col.a - 1);
+                clip(0.3 - d);
+                
                 return d;
             }
             ENDHLSL
