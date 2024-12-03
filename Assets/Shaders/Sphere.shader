@@ -3,6 +3,7 @@ Shader "Unlit/Sphere"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        _MaxDistance ("MaxDistance ", Float) = 5.0
     }
     SubShader
     {
@@ -66,7 +67,7 @@ Shader "Unlit/Sphere"
                 //viewDirWS -= pointLight.direction;
                 half NoV = saturate(pow(1 - dot(viewDirWS, i.normalWS), 5));
                 half3 rimCol = NoV * pointLight.color;
-                col.xyz += rimCol;
+                col.xyz += rimCol * i.positionWS.a;//边缘光衰减
                 return col;
             }
             ENDHLSL
